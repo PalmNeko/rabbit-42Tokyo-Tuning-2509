@@ -17,6 +17,8 @@ if [[ -e ./.da/.initLock ]]; then
 	fi
 fi
 
+mkdir -p .da/.docker_token
+
 # リポジトリ初期化開始
 echo "リポジトリの初期化を開始します。"
 
