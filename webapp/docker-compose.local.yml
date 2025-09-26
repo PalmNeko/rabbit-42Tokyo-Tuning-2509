@@ -124,11 +124,11 @@ services:
     image: jaegertracing/all-in-one:1.46
     command:
       - "--query.base-path=/jaeger"
-    # ports:
-      # - "16686:16686" # Jaeger UI
-      # - "14268:14268" # Jaeger collector
-      # - "14250:14250" # Jaeger gRPC collector
-      # - "4318:4318" # OpenTelemetry gRPC receiver
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14268:14268" # Jaeger collector
+      - "14250:14250" # Jaeger gRPC collector
+      - "4318:4318" # OpenTelemetry gRPC receiver
     networks:
       - webapp-network
 
