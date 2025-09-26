@@ -5,3 +5,4 @@
 sample/*
 deploy_*.sh
 *.pem
+.vscode/settings.json
