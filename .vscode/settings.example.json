@@ -45,5 +45,20 @@
     {
       "text": "bodyはファイルごとの詳細な変更内容を記述してください"
     }
-  ]
+  ],
+  "terminal.integrated.env.linux": {
+    "REMOTE_USER": "example",
+    "REMOTE_ADDRESS": "xxx.xxx.xxx.xxx",
+    "SSH_PEM": "some_key.pem"
+  },
+  "terminal.integrated.env.osx": {
+    "REMOTE_USER": "example",
+    "REMOTE_ADDRESS": "xxx.xxx.xxx.xxx",
+    "SSH_PEM": "some_key.pem"
+  },
+  "terminal.integrated.env.windows": {
+    "REMOTE_USER": "example",
+    "REMOTE_ADDRESS": "xxx.xxx.xxx.xxx",
+    "SSH_PEM": "some_key.pem"
+  }
 }
