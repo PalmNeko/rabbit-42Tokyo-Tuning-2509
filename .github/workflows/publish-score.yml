@@ -1,0 +1,31 @@
+name: Publish Remote Score
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  record-local-score:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: create pem file
+      run: |
+        echo "${{ secrets.SSH_PEM }}" > ./id_rsa
+        chmod 600 ./id_rsa
+    - name: connect remote server and run commands
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ./id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_ADDRESS }} << 'EOF'
+        REPO_URL="https://github.com/${{ github.repository }}.git"
+        mkdir -p ~/tmp
+        cd ~/tmp
+        sudo rm -rf rabbit-42Tokyo-Tuning-2509
+        git clone --depth=1 --branch ${{ github.ref_name }} "$REPO_URL"
+        cd rabbit-42Tokyo-Tuning-2509
+        cp -r /.da/.docker_token ./.da/
+        unzip -o ./.da/remote_restoreSQL.zip -d ./webapp/mysql/init/
+        curl -L -o ./.da/restoreSQL.zip https://github.com/DreamArts/42Tokyo-Tuning-2509/releases/download/restore_data-v1.0.0/restoreSQL.zip
+        unzip -o ./.da/restoreSQL.zip -d ./webapp/mysql/init/ 
+        export CI=true
+        bash ./run.sh
