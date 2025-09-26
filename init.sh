@@ -41,7 +41,7 @@ unzip ./.da/restoreSQL.zip -d ./webapp/mysql/init/
 
 # AzureContainerRegistryにログイン
 echo "Azure Container Registryにログインします。"
-DOCKER_TOKEN=$(<./.da/.docker_token)
+DOCKER_TOKEN=$(<./.da/.docker_token/.docker_token)
 docker login -u pull-key -p ${DOCKER_TOKEN} 42tokyo2508.azurecr.io > /dev/null 2>&1 # 
 
 (./restore_and_migration.sh)
