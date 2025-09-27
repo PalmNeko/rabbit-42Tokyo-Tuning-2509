@@ -1,0 +1,16 @@
+POST http://localhost:8080/api/v1/product/post
+Content-Type: application/json
+Cookie: session_id=your_session_id_here
+
+{
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    },
+    {
+      "product_id": 3,
+      "quantity": 1
+    }
+  ]
+}

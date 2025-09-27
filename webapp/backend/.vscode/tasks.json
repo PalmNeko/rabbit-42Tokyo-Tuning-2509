@@ -1,0 +1,15 @@
+{
+  "tasks": [
+    {
+      "type": "process",
+      "label": "go-build",
+      "command": "${env:HOME}/bin/go",
+      "args": [
+        "build", "-gcflags=all=-N -l", "-o", "build/backend", "./cmd/"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    }
+  ],
+  "version": "2.0.0"
+}

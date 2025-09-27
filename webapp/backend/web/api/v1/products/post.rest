@@ -1,0 +1,12 @@
+POST http://localhost:8080/api/v1/products
+Content-Type: application/json
+Cookie: session_id=your_session_id_here
+
+{
+  "search": "商品名",
+  "type": "partial",
+  "page": 1,
+  "page_size": 20,
+  "sort_field": "name",
+  "sort_order": "asc"
+}
