@@ -17,34 +17,31 @@ func NewProductRepository(db DBTX) *ProductRepository {
 func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req model.ListRequest) ([]model.Product, int, error) {
 	var products []model.Product
 	baseQuery := `
-		SELECT product_id, name, value, weight, image, description
+		SELECT product_id, name, value, weight, image
 		FROM products
 	`
+	where := ""
 	args := []interface{}{}
 
 	if req.Search != "" {
-		baseQuery += " WHERE (name LIKE ? OR description LIKE ?)"
+		where += " WHERE (name LIKE ? OR description LIKE ?)"
 		searchPattern := "%" + req.Search + "%"
 		args = append(args, searchPattern, searchPattern)
 	}
 
-	baseQuery += " ORDER BY " + req.SortField + " " + req.SortOrder + " , product_id ASC"
+	baseQuery += where + " ORDER BY " + req.SortField + " " + req.SortOrder + " , product_id ASC LIMIT ? OFFSET ?"
+	dataArgs := append(append([]interface{}{}, args...), req.PageSize, req.Offset)
 
-	err := r.db.SelectContext(ctx, &products, baseQuery, args...)
+	err := r.db.SelectContext(ctx, &products, baseQuery, dataArgs...)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total := len(products)
-	start := req.Offset
-	end := req.Offset + req.PageSize
-	if start > total {
-		start = total
+	countQuery := "SELECT COUNT(*) FROM products" + where
+	var total int
+	if err := r.db.GetContext(ctx, &total, countQuery, args...); err != nil {
+		return nil, 0, err
 	}
-	if end > total {
-		end = total
-	}
-	pagedProducts := products[start:end]
 
-	return pagedProducts, total, nil
+	return products, total, nil
 }
