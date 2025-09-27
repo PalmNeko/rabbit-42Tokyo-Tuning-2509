@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "root",
+			"path": "."
+		},
+		{
+			"name": "backend",
+			"path": "./webapp/backend"
+		}
+	],
+	"settings": {}
+}
