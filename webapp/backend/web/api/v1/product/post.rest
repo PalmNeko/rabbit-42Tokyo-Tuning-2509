@@ -1,0 +1,18 @@
+# @name login
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "user_name": "user001",
+  "password": "password"
+}
+
+###
+
+POST http://localhost:8080/api/v1/product
+Content-Type: application/json
+Cookie: {{login.response.headers.set-cookie}}
+
+{
+  "search": "テスト検索語"
+}

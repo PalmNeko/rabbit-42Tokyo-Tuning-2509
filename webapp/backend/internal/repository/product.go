@@ -35,7 +35,27 @@ func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req mo
 		req.Offset = 0
 	}
 
-	baseQuery += where + " ORDER BY " + req.SortField + " " + req.SortOrder + " , product_id ASC LIMIT ? OFFSET ?"
+	// デフォルトのソート設定
+	sortField := "product_id"
+	sortOrder := "ASC"
+
+	// 有効なソートフィールドの検証
+	validSortFields := map[string]bool{
+		"product_id": true,
+		"name":       true,
+		"value":      true,
+		"weight":     true,
+	}
+
+	if req.SortField != "" && validSortFields[req.SortField] {
+		sortField = req.SortField
+	}
+
+	if req.SortOrder == "DESC" {
+		sortOrder = "DESC"
+	}
+
+	baseQuery += where + " ORDER BY " + sortField + " " + sortOrder + " LIMIT ? OFFSET ?"
 	dataArgs := append(append([]interface{}{}, args...), req.PageSize, req.Offset)
 
 	err := r.db.SelectContext(ctx, &products, baseQuery, dataArgs...)

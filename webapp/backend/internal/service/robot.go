@@ -6,7 +6,6 @@ import (
 	"backend/internal/service/utils"
 	"context"
 	"log"
-	"sort"
 )
 
 type RobotService struct {
@@ -59,40 +58,6 @@ func (s *RobotService) UpdateOrderStatus(ctx context.Context, orderID int64, new
 func selectOrdersForDelivery(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
 	n := len(orders)
 
-	preFilterOrdersByValueDensity := func(orders []model.Order, robotCapacity int, size int) []model.Order {
-		type orderWithRatio struct {
-			order model.Order
-			ratio float64
-		}
-		candidates := make([]orderWithRatio, 0, len(orders))
-		for _, order := range orders {
-			if order.Weight <= 0 || order.Weight > robotCapacity {
-				continue
-			}
-			ratio := float64(order.Value) / float64(order.Weight)
-			candidates = append(candidates, orderWithRatio{
-				order: order,
-				ratio: ratio,
-			})
-		}
-		sort.Slice(candidates, func(i, j int) bool {
-			return candidates[i].ratio > candidates[j].ratio
-		})
-		count := size
-		if len(candidates) < count {
-			count = len(candidates)
-		}
-		result := make([]model.Order, count)
-		for i := 0; i < count; i++ {
-			result[i] = candidates[i].order
-		}
-		return result
-	}
-
-	if n > 30 {
-		orders = preFilterOrdersByValueDensity(orders, robotCapacity, 30)
-		n = len(orders)
-	}
 	if n > 20 {
 		return selectOrdersForDeliveryDP(ctx, orders, robotID, robotCapacity)
 	} else {
@@ -157,7 +122,12 @@ func selectOrdersForDeliveryDFS(ctx context.Context, orders []model.Order, robot
 func selectOrdersForDeliveryDP(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
     n := len(orders)
     if n == 0 {
-        return model.DeliveryPlan{RobotID: robotID}, nil
+        return model.DeliveryPlan{
+            RobotID:     robotID,
+            TotalWeight: 0,
+            TotalValue:  0,
+            Orders:      []model.Order{},
+        }, nil
     }
     
     log.Printf("Using DP algorithm for %d orders with capacity %d", n, robotCapacity)

@@ -68,32 +68,15 @@ if [[ $HOSTNAME == ftt2508-* ]]; then
 
     mkdir -p "$(pwd)/tokens"
 
-    # CI環境かどうかチェック
-    if [ "$CI" = "true" ] || [ -n "$GITHUB_ACTIONS" ]; then
-        # CI環境では非対話モードで実行
-        docker run --name e2e --rm --network webapp-network \
-            -e BASE_URL="https://${HOSTNAME}.ftt2508.dabaas.net" \
-            -e USE_DATAINDEX=${RANDOM_INDEX} \
-            -e CI=true \
-            -e PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
-            -v "$(pwd)/tokens:/usr/src/e2e/tokens" \
-            -v "$PWD/tsconfig.json:/usr/src/e2e/tsconfig.json:ro" \
-            -v "$PWD/tests:/usr/src/e2e/tests" \
-            -v "$PWD/playwright.config.ts:/usr/src/e2e/playwright.config.ts:ro" \
-            42tokyo2508.azurecr.io/e2e:latest \
-            yarn test --reporter=line
-    else
-        # 通常の環境では対話モードで実行
-        docker run --name e2e --rm --network webapp-network \
-            -e BASE_URL="https://${HOSTNAME}.ftt2508.dabaas.net" \
-            -e USE_DATAINDEX=${RANDOM_INDEX} \
-            -v "$(pwd)/tokens:/usr/src/e2e/tokens" \
-            -v "$PWD/tsconfig.json:/usr/src/e2e/tsconfig.json:ro" \
-            -v "$PWD/tests:/usr/src/e2e/tests" \
-            -v "$PWD/playwright.config.ts:/usr/src/e2e/playwright.config.ts:ro" \
-            -it 42tokyo2508.azurecr.io/e2e:latest \
-            yarn test
-    fi
+    docker run --name e2e --rm --network webapp-network \
+        -e BASE_URL="https://${HOSTNAME}.ftt2508.dabaas.net" \
+        -e USE_DATAINDEX=${RANDOM_INDEX} \
+        -v "$(pwd)/tokens:/usr/src/e2e/tokens" \
+        -v "$PWD/tsconfig.json:/usr/src/e2e/tsconfig.json:ro" \
+        -v "$PWD/tests:/usr/src/e2e/tests" \
+        -v "$PWD/playwright.config.ts:/usr/src/e2e/playwright.config.ts:ro" \
+        -it 42tokyo2508.azurecr.io/e2e:latest \
+        yarn test
 
     # E2Eコンテナの終了ステータスをチェック
     E2E_EXIT_CODE=$?
