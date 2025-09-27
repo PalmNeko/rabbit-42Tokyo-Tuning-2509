@@ -1,2 +1,2 @@
-GET http://localhost:8080/api/robot/delivery-plan?capacity=1
+GET http://localhost:8080/api/robot/delivery-plan?capacity=100
 X-API-KEY: test-robot-key
