@@ -12,7 +12,10 @@
 			"program": "build/backend",
 			"preLaunchTask": "go-build",
 			"env": {
-				"DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+				"DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db",
+				"TRACE_ENABLED": "true",
+				"JAEGER_ENDPOINT": "http://localhost:14268/api/traces",
+				"TRACE_SAMPLE_RATIO": "1.0"
 			}
 		}
 	]
