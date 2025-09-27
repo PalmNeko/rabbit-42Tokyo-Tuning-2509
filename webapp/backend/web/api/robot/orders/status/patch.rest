@@ -1,8 +1,8 @@
-POST http://localhost:8080/api/robot/orders/status
+PATCH http://localhost:8080/api/robot/orders/status
 Content-Type: application/json
 X-API-KEY: test-robot-key
 
 {
-  "order_id": 123,
+  "order_id": 750,
   "new_status": "complete"
 }
