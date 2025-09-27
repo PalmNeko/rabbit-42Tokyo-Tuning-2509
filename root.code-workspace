@@ -28,5 +28,10 @@
 			"SSH_PEM": "some_key.pem",
 			"DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
 		}
+	},
+	"extensions": {
+		"recommendations": [
+			"mtxr.sqltools-driver-mysql"
+		]
 	}
 }
