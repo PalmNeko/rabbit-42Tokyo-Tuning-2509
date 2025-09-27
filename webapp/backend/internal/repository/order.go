@@ -76,6 +76,7 @@ func (r *OrderRepository) ListOrders(ctx context.Context, userID int, req model.
 		req.Offset = (req.Page - 1) * req.PageSize
 	}
 
+
 	//当てはまらないカラムを弾くためのホワイトリスト
 	sortCols := map[string]string{
 		"order_id":       "o.order_id",
