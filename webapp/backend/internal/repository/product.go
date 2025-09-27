@@ -17,16 +17,22 @@ func NewProductRepository(db DBTX) *ProductRepository {
 func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req model.ListRequest) ([]model.Product, int, error) {
 	var products []model.Product
 	baseQuery := `
-		SELECT product_id, name, value, weight, image
+		SELECT product_id, name, value, weight, image, description
 		FROM products
 	`
 	where := ""
 	args := []interface{}{}
-
 	if req.Search != "" {
-		where += " WHERE (name LIKE ? OR description LIKE ?)"
+		where = " WHERE (name LIKE ? OR description LIKE ?)"
 		searchPattern := "%" + req.Search + "%"
 		args = append(args, searchPattern, searchPattern)
+	}
+
+	if req.PageSize <= 0 || req.PageSize > 200 {
+		req.PageSize = 50
+	}
+	if req.Offset < 0 {
+		req.Offset = 0
 	}
 
 	baseQuery += where + " ORDER BY " + req.SortField + " " + req.SortOrder + " , product_id ASC LIMIT ? OFFSET ?"
