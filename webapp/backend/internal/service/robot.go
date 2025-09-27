@@ -6,7 +6,6 @@ import (
 	"backend/internal/service/utils"
 	"context"
 	"log"
-	"sort"
 )
 
 type RobotService struct {
