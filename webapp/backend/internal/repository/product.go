@@ -23,9 +23,8 @@ func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req mo
 	where := ""
 	args := []interface{}{}
 	if req.Search != "" {
-		where += " WHERE (name LIKE ? OR description LIKE ?)"
-		searchPattern := "%" + req.Search + "%"
-		args = append(args, searchPattern, searchPattern)
+		where = " WHERE MATCH(name, description) AGAINST(? IN BOOLEAN MODE)"
+		args = append(args, req.Search)
 	}
 
 	if req.PageSize <= 0 || req.PageSize > 200 {
