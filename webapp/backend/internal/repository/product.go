@@ -1,32 +1,48 @@
+// backend/internal/repository/product_repository.go
 package repository
 
 import (
 	"backend/internal/model"
 	"context"
+	"fmt"
+	"strings"
 )
 
-type ProductRepository struct {
-	db DBTX
-}
+type ProductRepository struct{ db DBTX }
 
-func NewProductRepository(db DBTX) *ProductRepository {
-	return &ProductRepository{db: db}
-}
+func NewProductRepository(db DBTX) *ProductRepository { return &ProductRepository{db: db} }
 
-// 商品一覧を全件取得し、アプリケーション側でページング処理を行う
-func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req model.ListRequest) ([]model.Product, int, error) {
-	var products []model.Product
-	baseQuery := `
-		SELECT product_id, name, value, weight, image, description
-		FROM products
-	`
-	where := ""
-	args := []interface{}{}
-	if req.Search != "" {
-		where = " WHERE MATCH(name, description) AGAINST(? IN BOOLEAN MODE)"
-		args = append(args, req.Search)
+// where/order ビルド（一覧と件数で共有）
+func buildWhereAndOrder(req model.ListRequest) (whereSQL string, args []interface{}, orderSQL string) {
+	clauses := []string{}
+	args = []interface{}{}
+
+	search := strings.TrimSpace(req.Search)
+	if search != "" {
+		clauses = append(clauses, "MATCH(name, description) AGAINST(? IN BOOLEAN MODE)")
+		args = append(args, search)
 	}
 
+	if len(clauses) > 0 {
+		whereSQL = " WHERE " + strings.Join(clauses, " AND ")
+	}
+
+	// ソートはホワイトリスト
+	sortField := "product_id"
+	switch req.SortField {
+	case "product_id", "name", "value", "weight":
+		sortField = req.SortField
+	}
+	sortOrder := "ASC"
+	if strings.ToUpper(req.SortOrder) == "DESC" {
+		sortOrder = "DESC"
+	}
+
+	orderSQL = fmt.Sprintf(" ORDER BY %s %s", sortField, sortOrder)
+	return
+}
+
+func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req model.ListRequest) ([]model.Product, int, error) {
 	if req.PageSize <= 0 || req.PageSize > 200 {
 		req.PageSize = 50
 	}
@@ -34,38 +50,34 @@ func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req mo
 		req.Offset = 0
 	}
 
-	// デフォルトのソート設定
-	sortField := "product_id"
-	sortOrder := "ASC"
+	// 同じWHERE/ORDERを一覧と件数で共有
+	whereSQL, args, orderSQL := buildWhereAndOrder(req)
 
-	// 有効なソートフィールドの検証
-	validSortFields := map[string]bool{
-		"product_id": true,
-		"name":       true,
-		"value":      true,
-		"weight":     true,
-	}
+	// 一覧は“薄い”列で返す（image/descriptionは詳細API推奨）
+	listSQL := `
+		SELECT product_id, name, value, weight
+		FROM products` + whereSQL + orderSQL + ` LIMIT ? OFFSET ?`
+	listArgs := append(append([]interface{}{}, args...), req.PageSize, req.Offset)
 
-	if req.SortField != "" && validSortFields[req.SortField] {
-		sortField = req.SortField
-	}
-
-	if req.SortOrder == "DESC" {
-		sortOrder = "DESC"
-	}
-
-	baseQuery += where + " ORDER BY " + sortField + " " + sortOrder + " LIMIT ? OFFSET ?"
-	dataArgs := append(append([]interface{}{}, args...), req.PageSize, req.Offset)
-
-	err := r.db.SelectContext(ctx, &products, baseQuery, dataArgs...)
-	if err != nil {
+	var products []model.Product
+	if err := r.db.SelectContext(ctx, &products, listSQL, listArgs...); err != nil {
 		return nil, 0, err
 	}
 
-	countQuery := "SELECT COUNT(*) FROM products" + where
+	// 件数：検索なしはカウンタ表、検索ありは必ず COUNT(*)
 	var total int
-	if err := r.db.GetContext(ctx, &total, countQuery, args...); err != nil {
-		return nil, 0, err
+	if strings.TrimSpace(req.Search) == "" {
+		if err := r.db.GetContext(ctx, &total, `SELECT total FROM product_counters WHERE id=1`); err != nil {
+			// カウンタ取得に失敗した場合は最後の手段として厳密COUNT
+			if err2 := r.db.GetContext(ctx, &total, `SELECT COUNT(*) FROM products`); err2 != nil {
+				return nil, 0, err // もとのエラーを返す
+			}
+		}
+	} else {
+		countSQL := `SELECT COUNT(*) FROM products` + whereSQL
+		if err := r.db.GetContext(ctx, &total, countSQL, args...); err != nil {
+			return nil, 0, err
+		}
 	}
 
 	return products, total, nil
