@@ -108,6 +108,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf
+      - ./nginx_cache:/var/cache/nginx/api 
     networks:
       - webapp-network
     depends_on:
@@ -117,7 +118,10 @@ services:
       backend:
         condition: service_healthy
         required: true
-    command: ["nginx", "-g", "daemon off;"]
+    command: >
+      sh -c "mkdir -p /var/cache/nginx/api &&
+            chown -R nginx:nginx /var/cache/nginx &&
+            nginx -g 'daemon off;'"
 
   jaeger:
     container_name: jaeger
