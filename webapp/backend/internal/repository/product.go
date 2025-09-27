@@ -30,7 +30,7 @@ func buildWhereAndOrder(req model.ListRequest) (whereSQL string, args []interfac
 	// ソートはホワイトリスト
 	sortField := "product_id"
 	switch req.SortField {
-	case "product_id", "name", "value", "weight":
+	case "product_id", "name", "value", "weight", "image", "description":
 		sortField = req.SortField
 	}
 	sortOrder := "ASC"
@@ -55,7 +55,7 @@ func (r *ProductRepository) ListProducts(ctx context.Context, userID int, req mo
 
 	// 一覧は“薄い”列で返す（image/descriptionは詳細API推奨）
 	listSQL := `
-		SELECT product_id, name, value, weight
+		SELECT product_id, name, value, weight, image, description
 		FROM products` + whereSQL + orderSQL + ` LIMIT ? OFFSET ?`
 	listArgs := append(append([]interface{}{}, args...), req.PageSize, req.Offset)
 
