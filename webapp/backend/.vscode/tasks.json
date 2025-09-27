@@ -3,14 +3,10 @@
     {
       "type": "process",
       "label": "go-build",
-      "command": "make",
+      "command": "${env:HOME}/bin/go",
       "args": [
-        "debug",
-        "-C", "${workspaceFolder}"
+        "build", "-gcflags=all=-N -l", "-o", "build/backend", "./cmd/"
       ],
-      "options": {
-        "cwd": "${fileDirname}"
-      },
       "group": "build",
       "problemMatcher": []
     }
