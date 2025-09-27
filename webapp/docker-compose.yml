@@ -118,7 +118,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx_cache:/var/cache/nginx/api
+      # - ./nginx_cache:/var/cache/nginx/api
       - /da/tls:/da/tls:ro
     networks:
       - webapp-network
@@ -127,9 +127,9 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
-    command: >
-      sh -c "mkdir -p /var/cache/nginx/api &&
-            chown -R nginx:nginx /var/cache/nginx &&
+    # command: >
+    #   sh -c "mkdir -p /var/cache/nginx/api &&
+    #         chown -R nginx:nginx /var/cache/nginx &&
 
   jaeger:
     container_name: jaeger
@@ -153,4 +153,3 @@ networks:
   webapp-network:
     name: webapp-network
     external: true
-
