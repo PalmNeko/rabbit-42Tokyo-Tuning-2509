@@ -1,0 +1,16 @@
+{
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
+  },
+  "terminal.integrated.env.linux": {
+    "DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+  },
+  "terminal.integrated.env.osx": {
+    "DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+  },
+  "terminal.integrated.env.windows": {
+    "DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+  }
+}
