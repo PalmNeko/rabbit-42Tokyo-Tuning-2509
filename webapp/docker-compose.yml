@@ -128,8 +128,7 @@ services:
       backend:
         condition: service_healthy
     command: >
-      sh -c "mkdir -p /var/cache/nginx/api &&
-            chown -R nginx:nginx /var/cache/nginx &&
+      sh -c "mkdir -p /var/cache/nginx/api && chown -R nginx:nginx /var/cache/nginx && exec nginx -g 'daemon off;'"
 
   jaeger:
     container_name: jaeger
@@ -153,3 +152,4 @@ networks:
   webapp-network:
     name: webapp-network
     external: true
+
