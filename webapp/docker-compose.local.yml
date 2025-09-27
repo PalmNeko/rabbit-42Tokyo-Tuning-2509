@@ -108,6 +108,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf
+      - ./nginx_cache:/var/cache/nginx/api 
     networks:
       - webapp-network
     depends_on:
@@ -117,18 +118,21 @@ services:
       backend:
         condition: service_healthy
         required: true
-    command: ["nginx", "-g", "daemon off;"]
+    command: >
+      sh -c "mkdir -p /var/cache/nginx/api &&
+            chown -R nginx:nginx /var/cache/nginx &&
+            nginx -g 'daemon off;'"
 
   jaeger:
     container_name: jaeger
     image: jaegertracing/all-in-one:1.46
     command:
       - "--query.base-path=/jaeger"
-    # ports:
-      # - "16686:16686" # Jaeger UI
-      # - "14268:14268" # Jaeger collector
-      # - "14250:14250" # Jaeger gRPC collector
-      # - "4318:4318" # OpenTelemetry gRPC receiver
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "14268:14268" # Jaeger collector
+      - "14250:14250" # Jaeger gRPC collector
+      - "4318:4318" # OpenTelemetry gRPC receiver
     networks:
       - webapp-network
 
