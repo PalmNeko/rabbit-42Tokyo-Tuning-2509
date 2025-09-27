@@ -3,7 +3,7 @@
 
 -- Individual indexes for search fields
 CREATE INDEX idx_products_name ON products(name);
-CREATE INDEX idx_products_description ON products(description);
+CREATE INDEX idx_products_description ON products(description(128));
 
 -- Indexes for common sort fields
 CREATE INDEX idx_products_value ON products(value);
@@ -18,7 +18,7 @@ CREATE FULLTEXT INDEX idx_products_fulltext ON products(name, description) WITH 
 CREATE INDEX idx_products_name_value ON products(name, value);
 
 -- Search by description with value sorting
-CREATE INDEX idx_products_description_value ON products(description, value);
+CREATE INDEX idx_products_description_value ON products(description(128), value);
 
 -- General purpose composite index for pagination with sorting
 CREATE INDEX idx_products_value_id ON products(value, product_id);

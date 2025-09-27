@@ -69,7 +69,7 @@ if [[ $HOSTNAME == ftt2508-* ]]; then
     mkdir -p "$(pwd)/tokens"
 
     # CI環境かどうかチェック
-    if [ "$CI" = "true" ] || [ -n "$GITHUB_ACTIONS" ]; then
+    if [ "${CI:-}" = "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
         # CI環境では非対話モードで実行
         docker run --name e2e --rm --network webapp-network \
             -e BASE_URL="https://${HOSTNAME}.ftt2508.dabaas.net" \
