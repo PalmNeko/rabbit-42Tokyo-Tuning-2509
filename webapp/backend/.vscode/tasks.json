@@ -1,0 +1,19 @@
+{
+  "tasks": [
+    {
+      "type": "process",
+      "label": "go-build",
+      "command": "make",
+      "args": [
+        "debug",
+        "-C", "${workspaceFolder}"
+      ],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "group": "build",
+      "problemMatcher": []
+    }
+  ],
+  "version": "2.0.0"
+}

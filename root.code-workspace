@@ -9,5 +9,24 @@
 			"path": "./webapp/backend"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"REMOTE_USER": "example",
+			"REMOTE_ADDRESS": "xxx.xxx.xxx.xxx",
+			"SSH_PEM": "some_key.pem",
+			"DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+		},
+		"terminal.integrated.env.osx": {
+			"REMOTE_USER": "example",
+			"REMOTE_ADDRESS": "xxx.xxx.xxx.xxx",
+			"SSH_PEM": "some_key.pem",
+			"DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+		},
+		"terminal.integrated.env.windows": {
+			"REMOTE_USER": "example",
+			"REMOTE_ADDRESS": "xxx.xxx.xxx.xxx",
+			"SSH_PEM": "some_key.pem",
+			"DATABASE_URL": "user:password@tcp(localhost:13306)/42Tokyo2508-db"
+		}
+	}
 }
