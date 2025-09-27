@@ -83,11 +83,42 @@ func (r *OrderRepository) ListOrders(ctx context.Context, userID int, req model.
 		return nil, 0, err
 	}
 
+	idSet := make(map[int]struct{}, len(ordersRaw))
+	for _, o := range ordersRaw {
+		idSet[o.ProductID] = struct{}{}
+	}
+	ids := make([]int, 0, len(idSet))
+	for id := range idSet {
+		ids = append(ids, id)
+	}
+
+	nameByID := make(map[int]string, len(ids))
+	if len(ids) > 0 {
+		type prodRow struct {
+			ProductID int    `db:"product_id"`
+			Name      string `db:"name"`
+		}
+		var prodRows []prodRow
+
+		inQuery, args, err := sqlx.In(`SELECT product_id, name FROM products WHERE product_id IN (?)`, ids)
+		if err != nil {
+			return nil, 0, err
+		}
+		inQuery = r.db.Rebind(inQuery)
+
+		if err := r.db.SelectContext(ctx, &prodRows, inQuery, args...); err != nil {
+			return nil, 0, err
+		}
+		for _, pr := range prodRows {
+			nameByID[pr.ProductID] = pr.Name
+		}
+	}
+
 	var orders []model.Order
 	for _, o := range ordersRaw {
-		var productName string
-		if err := r.db.GetContext(ctx, &productName, "SELECT name FROM products WHERE product_id = ?", o.ProductID); err != nil {
-			return nil, 0, err
+		productName, ok := nameByID[o.ProductID]
+		if !ok {
+			return nil, 0, fmt.Errorf("product not found (product_id=%d)", o.ProductID)
 		}
 		if req.Search != "" {
 			if req.Type == "prefix" {
