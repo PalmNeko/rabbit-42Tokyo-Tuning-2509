@@ -122,7 +122,12 @@ func selectOrdersForDeliveryDFS(ctx context.Context, orders []model.Order, robot
 func selectOrdersForDeliveryDP(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
     n := len(orders)
     if n == 0 {
-        return model.DeliveryPlan{RobotID: robotID}, nil
+        return model.DeliveryPlan{
+            RobotID:     robotID,
+            TotalWeight: 0,
+            TotalValue:  0,
+            Orders:      []model.Order{},
+        }, nil
     }
     
     log.Printf("Using DP algorithm for %d orders with capacity %d", n, robotCapacity)
