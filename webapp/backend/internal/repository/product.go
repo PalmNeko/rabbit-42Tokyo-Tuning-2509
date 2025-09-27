@@ -1,4 +1,3 @@
-// backend/internal/repository/product_repository.go
 package repository
 
 import (
@@ -19,8 +18,9 @@ func buildWhereAndOrder(req model.ListRequest) (whereSQL string, args []interfac
 
 	search := strings.TrimSpace(req.Search)
 	if search != "" {
-		clauses = append(clauses, "MATCH(name, description) AGAINST(? IN BOOLEAN MODE)")
-		args = append(args, search)
+		clauses = append(clauses, "(name LIKE ? OR description LIKE ?)")
+		like := "%" + search + "%"
+		args = append(args, like, like)
 	}
 
 	if len(clauses) > 0 {
