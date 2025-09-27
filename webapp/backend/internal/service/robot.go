@@ -6,6 +6,7 @@ import (
 	"backend/internal/service/utils"
 	"context"
 	"log"
+	"sort"
 )
 
 type RobotService struct {
@@ -57,6 +58,50 @@ func (s *RobotService) UpdateOrderStatus(ctx context.Context, orderID int64, new
 
 func selectOrdersForDelivery(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
 	n := len(orders)
+
+	preFilterOrdersByValueDensity := func(orders []model.Order, robotCapacity int, size int) []model.Order {
+		type orderWithRatio struct {
+			order model.Order
+			ratio float64
+		}
+		candidates := make([]orderWithRatio, 0, len(orders))
+		for _, order := range orders {
+			if order.Weight <= 0 || order.Weight > robotCapacity {
+				continue
+			}
+			ratio := float64(order.Value) / float64(order.Weight)
+			candidates = append(candidates, orderWithRatio{
+				order: order,
+				ratio: ratio,
+			})
+		}
+		sort.Slice(candidates, func(i, j int) bool {
+			return candidates[i].ratio > candidates[j].ratio
+		})
+		count := size
+		if len(candidates) < count {
+			count = len(candidates)
+		}
+		result := make([]model.Order, count)
+		for i := 0; i < count; i++ {
+			result[i] = candidates[i].order
+		}
+		return result
+	}
+
+	if n > 30 {
+		orders = preFilterOrdersByValueDensity(orders, robotCapacity, 30)
+		n = len(orders)
+	}
+	if n > 20 {
+		return selectOrdersForDeliveryDP(ctx, orders, robotID, robotCapacity)
+	} else {
+		return selectOrdersForDeliveryDFS(ctx, orders, robotID, robotCapacity)
+	}
+}
+
+func selectOrdersForDeliveryDFS(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
+	n := len(orders)
 	bestValue := 0
 	var bestSet []model.Order
 	steps := 0
@@ -107,4 +152,69 @@ func selectOrdersForDelivery(ctx context.Context, orders []model.Order, robotID 
 		TotalValue:  bestValue,
 		Orders:      bestSet,
 	}, nil
+}
+
+func selectOrdersForDeliveryDP(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
+    n := len(orders)
+    if n == 0 {
+        return model.DeliveryPlan{RobotID: robotID}, nil
+    }
+    
+    log.Printf("Using DP algorithm for %d orders with capacity %d", n, robotCapacity)
+    
+    // DPテーブル: dp[i][w] = i番目までの注文でw重量以下での最大価値
+    dp := make([][]int, n+1)
+    for i := range dp {
+        dp[i] = make([]int, robotCapacity+1)
+    }
+    
+    // DP計算
+    for i := 1; i <= n; i++ {
+        // 100回に1回コンテキストチェック
+        if i%100 == 0 {
+            select {
+            case <-ctx.Done():
+                return model.DeliveryPlan{}, ctx.Err()
+            default:
+            }
+        }
+        
+        order := orders[i-1]
+        for w := 0; w <= robotCapacity; w++ {
+            // 取らない場合
+            dp[i][w] = dp[i-1][w]
+            
+            // 取る場合（重量制約内なら）
+            if order.Weight <= w {
+                takeValue := dp[i-1][w-order.Weight] + order.Value
+                if takeValue > dp[i][w] {
+                    dp[i][w] = takeValue
+                }
+            }
+        }
+    }
+    
+    // 解の復元
+    selectedOrders := []model.Order{}
+    totalWeight := 0
+    i, w := n, robotCapacity
+    
+    for i > 0 && w > 0 {
+        if dp[i][w] != dp[i-1][w] {
+            selectedOrders = append(selectedOrders, orders[i-1])
+            totalWeight += orders[i-1].Weight
+            w -= orders[i-1].Weight
+        }
+        i--
+    }
+    
+    log.Printf("DP completed: selected %d orders, total weight %d, total value %d", 
+        len(selectedOrders), totalWeight, dp[n][robotCapacity])
+    
+    return model.DeliveryPlan{
+        RobotID:     robotID,
+        TotalWeight: totalWeight,
+        TotalValue:  dp[n][robotCapacity],
+        Orders:      selectedOrders,
+    }, nil
 }
