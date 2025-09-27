@@ -63,7 +63,7 @@ func (r *OrderRepository) GetShippingOrders(ctx context.Context) ([]model.Order,
 	return orders, err
 }
 
-// 注文履歴一覧を取得
+// 注文履歴一覧を取得()
 func (r *OrderRepository) ListOrders(ctx context.Context, userID int, req model.ListRequest) ([]model.Order, int, error) {
 	if req.PageSize <= 0 {
 		req.PageSize = 50
@@ -71,6 +71,11 @@ func (r *OrderRepository) ListOrders(ctx context.Context, userID int, req model.
 	if req.Offset < 0 {
 		req.Offset = 0
 	}
+
+	if req.Page > 0 && (req.Offset == 0 || (req.Page-1)*req.PageSize != req.Offset) {
+		req.Offset = (req.Page - 1) * req.PageSize
+	}
+
 
 	//当てはまらないカラムを弾くためのホワイトリスト
 	sortCols := map[string]string{
