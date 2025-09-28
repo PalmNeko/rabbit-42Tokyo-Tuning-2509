@@ -5,7 +5,6 @@ import (
 	"backend/internal/model"
 	"backend/internal/service"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -99,17 +98,14 @@ func (h *ProductHandler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *ProductHandler) GetImage(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("画像リクエスト受信: %s\n", r.URL.String())
 	imagePath := r.URL.Query().Get("path")
 	if imagePath == "" {
-		fmt.Println("画像パスが空です")
 		http.Error(w, "画像パスが指定されていません", http.StatusBadRequest)
 		return
 	}
 
 	imagePath = filepath.Clean(imagePath)
 	if filepath.IsAbs(imagePath) || strings.Contains(imagePath, "..") {
-		fmt.Printf("無効なパス: %s\n", imagePath)
 		http.Error(w, "無効なパスです", http.StatusBadRequest)
 		return
 	}
@@ -118,7 +114,6 @@ func (h *ProductHandler) GetImage(w http.ResponseWriter, r *http.Request) {
 	fullPath := filepath.Join(baseImageDir, imagePath)
 
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		fmt.Printf("画像ファイルが見つかりません: %s\n", fullPath)
 		http.Error(w, "画像が見つかりません", http.StatusNotFound)
 		return
 	}
@@ -141,7 +136,6 @@ func (h *ProductHandler) GetImage(w http.ResponseWriter, r *http.Request) {
 
 	data, err := os.ReadFile(fullPath)
 	if err != nil {
-		fmt.Printf("画像ファイルの読み込みに失敗: %s\n", fullPath)
 		http.Error(w, "画像の読み込みに失敗しました", http.StatusInternalServerError)
 		return
 	}

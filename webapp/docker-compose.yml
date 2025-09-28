@@ -2,8 +2,8 @@ services:
   # ----------------------------------------------------
   # Backend サービス: Go 言語の AP サーバー
   # ----------------------------------------------------
-  backend:
-    container_name: tuning-backend
+  backend1:
+    container_name: tuning-backend-1
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -39,7 +39,80 @@ services:
       timeout: 30s
       retries: 10
       start_period: 30s
-
+  backend2:
+    container_name: tuning-backend-2
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      TZ: Asia/Tokyo
+      DATABASE_URL: user:password@tcp(db:3306)/42Tokyo2508-db
+      TRACE_ENABLED: "true" # いらない時はfalse
+      JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
+      TRACE_SAMPLE_RATIO: "1.0"
+      # OTEL_TRACES_SAMPLER: "always_off"
+    ports:
+      - "8080:8080"
+    working_dir: /usr/src/backend
+    volumes:
+      - ./images:/app/images:ro
+    networks:
+      - webapp-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-I",
+          "http://localhost:8080/api/health",
+          "-X",
+          "GET",
+        ]
+      interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+  backend3:
+    container_name: tuning-backend-3
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      TZ: Asia/Tokyo
+      DATABASE_URL: user:password@tcp(db:3306)/42Tokyo2508-db
+      TRACE_ENABLED: "true" # いらない時はfalse
+      JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
+      TRACE_SAMPLE_RATIO: "1.0"
+      # OTEL_TRACES_SAMPLER: "always_off"
+    ports:
+      - "8080:8080"
+    working_dir: /usr/src/backend
+    volumes:
+      - ./images:/app/images:ro
+    networks:
+      - webapp-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-I",
+          "http://localhost:8080/api/health",
+          "-X",
+          "GET",
+        ]
+      interval: 5s
+      timeout: 30s
+      retries: 10
+      start_period: 30s
   # ----------------------------------------------------
   # Frontend サービス: クライアントサイドの Web アプリケーション
   # ----------------------------------------------------
@@ -66,7 +139,6 @@ services:
       retries: 6
       start_period: 20s
     entrypoint: ["sh", "-c", "yarn start --hostname 0.0.0.0 --port 3000"]
-
   # ----------------------------------------------------
   # DB サービス: MySQL データベース (Makefile の設定を移行)
   # ----------------------------------------------------
