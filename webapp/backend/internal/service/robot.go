@@ -70,13 +70,59 @@ func (s *RobotService) UpdateOrderStatus(ctx context.Context, orderID int64, new
 }
 
 func selectOrdersForDelivery(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
-	n := len(orders)
-
-	if n > 20 {
-		return selectOrdersForDeliveryDP(ctx, orders, robotID, robotCapacity)
-	} else {
-		return selectOrdersForDeliveryDFS(ctx, orders, robotID, robotCapacity)
+	// ゼロ値で返すと orders:null になるのを避けるため、先に空スライスで初期化
+	plan := model.DeliveryPlan{
+		RobotID:     robotID,
+		Orders:      make([]model.Order, 0),
+		TotalWeight: 0,
+		TotalValue:  0,
 	}
+
+	// 容量内の注文だけを候補にする
+	eligible := make([]model.Order, 0, len(orders))
+	for _, o := range orders {
+		if o.Weight <= robotCapacity {
+			eligible = append(eligible, o)
+		}
+	}
+	if len(eligible) == 0 {
+		// 候補自体がない場合は空配列のまま返す（上位でデータ供給や事前注文作成を検討）
+		return plan, nil
+	}
+
+	// 既存ロジック（件数で DP/DFS を切り替え）
+	var res model.DeliveryPlan
+	var err error
+	if len(eligible) > 20 {
+		res, err = selectOrdersForDeliveryDP(ctx, eligible, robotID, robotCapacity)
+	} else {
+		res, err = selectOrdersForDeliveryDFS(ctx, eligible, robotID, robotCapacity)
+	}
+	if err != nil {
+		return plan, err
+	}
+
+	// 結果を反映（nil 防止）
+	if res.Orders != nil {
+		plan.Orders = res.Orders
+	}
+	plan.TotalWeight = res.TotalWeight
+	plan.TotalValue = res.TotalValue
+
+	// フェイルセーフ：0件なら候補から価値最大の1件を入れる
+	if len(plan.Orders) == 0 && len(eligible) > 0 {
+		best := eligible[0]
+		for _, o := range eligible[1:] {
+			if o.Value > best.Value {
+				best = o
+			}
+		}
+		plan.Orders = []model.Order{best}
+		plan.TotalWeight = best.Weight
+		plan.TotalValue = best.Value
+	}
+
+	return plan, nil
 }
 
 func selectOrdersForDeliveryDFS(ctx context.Context, orders []model.Order, robotID string, robotCapacity int) (model.DeliveryPlan, error) {
