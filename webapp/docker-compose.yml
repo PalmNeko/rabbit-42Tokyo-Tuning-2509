@@ -130,7 +130,11 @@ services:
     networks:
       - webapp-network
     depends_on:
-      backend:
+      backend1:
+        condition: service_healthy
+      backend2:
+        condition: service_healthy
+      backend3:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health-check"]
@@ -197,7 +201,11 @@ services:
     depends_on:
       frontend:
         condition: service_healthy
-      backend:
+      backend1:
+        condition: service_healthy
+      backend2:
+        condition: service_healthy
+      backend3:
         condition: service_healthy
     command: >
       sh -c "mkdir -p /var/cache/nginx/api && chown -R nginx:nginx /var/cache/nginx && exec nginx -g 'daemon off;'"
