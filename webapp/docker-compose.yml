@@ -15,8 +15,6 @@ services:
       JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
       TRACE_SAMPLE_RATIO: "1.0"
       # OTEL_TRACES_SAMPLER: "always_off"
-    ports:
-      - "8080:8080"
     working_dir: /usr/src/backend
     volumes:
       - ./images:/app/images:ro
@@ -52,8 +50,6 @@ services:
       JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
       TRACE_SAMPLE_RATIO: "1.0"
       # OTEL_TRACES_SAMPLER: "always_off"
-    ports:
-      - "8080:8080"
     working_dir: /usr/src/backend
     volumes:
       - ./images:/app/images:ro
@@ -89,8 +85,6 @@ services:
       JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
       TRACE_SAMPLE_RATIO: "1.0"
       # OTEL_TRACES_SAMPLER: "always_off"
-    ports:
-      - "8080:8080"
     working_dir: /usr/src/backend
     volumes:
       - ./images:/app/images:ro
