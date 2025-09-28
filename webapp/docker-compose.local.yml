@@ -2,8 +2,66 @@ services:
   # ----------------------------------------------------
   # Backend サービス: Go 言語の AP サーバー
   # ----------------------------------------------------
-  backend:
-    container_name: tuning-backend
+  backend1:
+    container_name: tuning-backend-1
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      TRACE_ENABLED: "true"
+      JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
+      TRACE_SAMPLE_RATIO: "1.0"
+      DATABASE_URL: user:password@tcp(db:3306)/42Tokyo2508-db
+      PORT: 8080
+    working_dir: /usr/src/backend
+    volumes:
+      # 画像ファイル用のボリュームを追加
+      - ./images:/app/images:ro
+      - ./backend:/usr/src/backend
+    # ports:
+    networks:
+      - webapp-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:${PORT:-8080}/api/health || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 600s
+
+  backend2:
+    container_name: tuning-backend-2
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      TRACE_ENABLED: "true"
+      JAEGER_ENDPOINT: "http://jaeger:14268/api/traces"
+      TRACE_SAMPLE_RATIO: "1.0"
+      DATABASE_URL: user:password@tcp(db:3306)/42Tokyo2508-db
+      PORT: 8080
+    working_dir: /usr/src/backend
+    volumes:
+      # 画像ファイル用のボリュームを追加
+      - ./images:/app/images:ro
+      - ./backend:/usr/src/backend
+    # ports:
+    networks:
+      - webapp-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1:${PORT:-8080}/api/health || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 600s
+
+  backend3:
+    container_name: tuning-backend-3
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -47,7 +105,11 @@ services:
     networks:
       - webapp-network
     depends_on:
-      backend:
+      backend1:
+        condition: service_healthy
+      backend2:
+        condition: service_healthy
+      backend3:
         condition: service_healthy
     entrypoint: ["sh", "-c", "yarn install --frozen-lockfile && yarn dev"]
     healthcheck:
@@ -115,7 +177,13 @@ services:
       frontend:
         condition: service_healthy
         required: true
-      backend:
+      backend1:
+        condition: service_healthy
+        required: true
+      backend2:
+        condition: service_healthy
+        required: true
+      backend3:
         condition: service_healthy
         required: true
     command: >
@@ -142,4 +210,3 @@ services:
 networks:
   webapp-network:
     name: webapp-network
-    external: true

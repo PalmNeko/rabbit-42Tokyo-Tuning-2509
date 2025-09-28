@@ -1,25 +1,15 @@
--- Performance optimization indexes for products table
--- This migration adds indexes to improve search and sort performance
+-- Optimized performance indexes for products table
+-- Based on actual query patterns in product.go
 
--- Individual indexes for search fields
-CREATE INDEX idx_products_name ON products(name);
-CREATE INDEX idx_products_description ON products(description(128));
+-- Essential composite indexes for common query patterns
+-- LIKE search with sorting (covers the main ListProducts query)
+CREATE INDEX idx_products_search_sort ON products(name, value, product_id);
+CREATE INDEX idx_products_desc_search_sort ON products(description(50), value, product_id);
 
--- Indexes for common sort fields
-CREATE INDEX idx_products_value ON products(value);
-CREATE INDEX idx_products_weight ON products(weight);
+-- Individual sort indexes for different sort options
+CREATE INDEX idx_products_value_sort ON products(value, product_id);
+CREATE INDEX idx_products_weight_sort ON products(weight, product_id);
+CREATE INDEX idx_products_name_sort ON products(name, product_id);
 
--- Full-text search index for better Japanese text search
--- Note: Requires MySQL 5.7+ with ngram parser for Japanese
-CREATE FULLTEXT INDEX idx_products_fulltext ON products(name, description) WITH PARSER ngram;
-
--- Composite indexes for common query patterns
--- Search by name with value sorting
-CREATE INDEX idx_products_name_value ON products(name, value);
-
--- Search by description with value sorting
-CREATE INDEX idx_products_description_value ON products(description(128), value);
-
--- General purpose composite index for pagination with sorting
-CREATE INDEX idx_products_value_id ON products(value, product_id);
-CREATE INDEX idx_products_weight_id ON products(weight, product_id);
+-- Simple index for name LIKE queries (fallback)
+CREATE INDEX idx_products_name_prefix ON products(name);
