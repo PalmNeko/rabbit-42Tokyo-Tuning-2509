@@ -76,7 +76,6 @@ func (r *OrderRepository) ListOrders(ctx context.Context, userID int, req model.
 		req.Offset = (req.Page - 1) * req.PageSize
 	}
 
-
 	//当てはまらないカラムを弾くためのホワイトリスト
 	sortCols := map[string]string{
 		"order_id":       "o.order_id",
@@ -162,4 +161,39 @@ func (r *OrderRepository) ListOrders(ctx context.Context, userID int, req model.
 	}
 
 	return orders, total, nil
+}
+
+// １回のINSERTで複数行挿入を行う
+func (r *OrderRepository) CreateBulk(ctx context.Context, orders []model.Order) ([]string, error) {
+	if len(orders) == 0 {
+		return nil, nil
+	}
+
+	// MySQL の場合、1回の INSERT で複数行挿入
+	query := "INSERT INTO orders (user_id, product_id, shipped_status, created_at) VALUES "
+	args := make([]any, 0, len(orders)*2)
+	vals := make([]string, 0, len(orders))
+
+	for _, o := range orders {
+		vals = append(vals, "(?, ?, 'shipping', NOW())")
+		args = append(args, o.UserID, o.ProductID)
+	}
+
+	query += strings.Join(vals, ",")
+	result, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	firstID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	// 連番で ID を計算して返す
+	ids := make([]string, len(orders))
+	for i := range orders {
+		ids[i] = fmt.Sprintf("%d", firstID+int64(i))
+	}
+	return ids, nil
 }
